@@ -9,14 +9,14 @@ Seguindo boas práticas citadas pelo Eduardo Pires (dev.io)
 
 ### Entity Framework
     
-    - Instalando o CLI do Entity Framework
-    ```bash
-        dotnet tool install --global dotnet-ef
-    ```
+Instalando o CLI do Entity Framework
+```bash
+    dotnet tool install --global dotnet-ef
+```
 
-    ```bash
-        dotnet tool update --global dotnet-ef
-    ```
+```bash
+    dotnet tool update --global dotnet-ef
+```
 
 ### MySql com Docker
 
