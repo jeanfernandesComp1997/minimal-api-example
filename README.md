@@ -20,28 +20,28 @@ Instalando o CLI do Entity Framework
 
 ### MySql com Docker
 
-    - Executando um container MySql no docker
-    ```bash
-        docker run --name mysql-cluster -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d mysql
-    ```
+Executando um container MySql no docker
+```bash
+    docker run --name mysql-cluster -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -d mysql
+```
 
-    - Executando o mesmo container posteriormente
-    ```bash
-        docker ps -a
-    ```
+Executando o mesmo container posteriormente
+```bash
+    docker ps -a
+```
 
-    ```bash
-        docker container start id_container
-    ```
+```bash
+    docker container start id_container
+```
 
 ## Criando a primeira Migration
 
-    ```bash
-        dotnet ef migrations add Initial -p ./Minimal.Api.csproj
-    ```
+```bash
+    dotnet ef migrations add Initial -p ./Minimal.Api.csproj
+```
 
 ## Aplicando Migration
 
-    ```bash
-        dotnet ef database update -p ./Minimal.Api.csproj
-    ```
+```bash
+    dotnet ef database update -p ./Minimal.Api.csproj
+```
