@@ -20,4 +20,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapGet("/customer", async (
+    MinimalContextDb context) =>
+    await context.Customers.ToListAsync())
+    .WithName("GetCustomer")
+    .WithTags("Customer");
+
 app.Run();
