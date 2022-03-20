@@ -62,11 +62,64 @@ app.MapPost("/customer", async (
 
         return result > 0
             ? Results.Created($"/customer/{customer.Id}", customer)
-            : Results.BadRequest();
+            : Results.BadRequest("There was a problem saving the record.");
     })
+    .ProducesValidationProblem()
     .Produces<Customer>(StatusCodes.Status201Created)
     .Produces(StatusCodes.Status400BadRequest)
     .WithName("PostCustomer")
+    .WithTags("Customer");
+
+app.MapPut("/customer/{id}", async (
+    Guid id,
+    MinimalContextDb context,
+    Customer customer) =>
+    {
+        if (!MiniValidator.TryValidate(customer, out var errors))
+            return Results.ValidationProblem(errors);
+
+        if (context?.Customers == null) throw new ApplicationException();
+
+        var customerQueryResult = await context.Customers.FindAsync(id);
+        if (customerQueryResult == null) return Results.NotFound();
+
+        context.Entry(customerQueryResult).State = EntityState.Detached;
+
+        context.Customers.Update(customer);
+        var result = await context.SaveChangesAsync();
+
+        return result > 0
+            ? Results.NoContent()
+            : Results.BadRequest("There was a problem updating the record.");
+    })
+    .ProducesValidationProblem()
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("PutCustomer")
+    .WithTags("Customer");
+
+app.MapDelete("/customer/{id}", async (
+    Guid id,
+    MinimalContextDb context) =>
+    {
+        if (context?.Customers == null) throw new ApplicationException();
+
+        var customerQueryResult = await context.Customers.FindAsync(id);
+        if (customerQueryResult == null) return Results.NotFound();
+        
+        context.Entry(customerQueryResult).State = EntityState.Detached;
+
+        context.Customers.Remove(customerQueryResult);
+        var result = await context.SaveChangesAsync();
+
+        return result > 0
+            ? Results.NoContent()
+            : Results.BadRequest("There was a problem delete the record.");
+    })
+    .ProducesValidationProblem()
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("DeleteCustomer")
     .WithTags("Customer");
 
 app.Run();
