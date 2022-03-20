@@ -80,10 +80,9 @@ app.MapPut("/customer/{id}", async (
 
         if (context?.Customers == null) throw new ApplicationException();
 
-        var customerQueryResult = await context.Customers.FindAsync(id);
+        var customerQueryResult = await context.Customers.AsNoTracking<Customer>()
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (customerQueryResult == null) return Results.NotFound();
-
-        context.Entry(customerQueryResult).State = EntityState.Detached;
 
         context.Customers.Update(customer);
         var result = await context.SaveChangesAsync();
@@ -104,10 +103,9 @@ app.MapDelete("/customer/{id}", async (
     {
         if (context?.Customers == null) throw new ApplicationException();
 
-        var customerQueryResult = await context.Customers.FindAsync(id);
+        var customerQueryResult = await context.Customers.AsNoTracking<Customer>()
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (customerQueryResult == null) return Results.NotFound();
-        
-        context.Entry(customerQueryResult).State = EntityState.Detached;
 
         context.Customers.Remove(customerQueryResult);
         var result = await context.SaveChangesAsync();
