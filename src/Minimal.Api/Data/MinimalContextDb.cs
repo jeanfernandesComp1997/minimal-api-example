@@ -5,9 +5,11 @@ namespace Minimal.Api.Data
 {
     public class MinimalContextDb : DbContext
     {
-        public MinimalContextDb(DbContextOptions<MinimalContextDb> options) : base(options) { }
+        public DbSet<Customer>? Customers { get; set; }
 
-        public DbSet<Customer> Customers { get; set; }
+        public MinimalContextDb(DbContextOptions<MinimalContextDb> options) : base(options)
+        {
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
