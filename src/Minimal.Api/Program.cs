@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Minimal.Api.Data;
 using Minimal.Api.Models;
 using MiniValidation;
+using Microsoft.AspNetCore.Identity;
+using Minimal.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,17 @@ var serverVersion = new MySqlServerVersion(new Version(8, 0, 27));
 builder.Services.AddDbContext<MinimalContextDb>(options =>
     options.UseMySql(connection, serverVersion));
 
+builder.Services.AddDbContext<AppIdentityDbContext>(o =>
+    o.UseMySql(connection, serverVersion));
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppIdentityDbContext>()
+    .AddDefaultTokenProviders();
+
+AuthConfiguration.AddConfiguration(builder);
+builder.Services.AddJwtConfiguration(builder.Configuration);
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -22,6 +35,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapGet("/customer", async (
     MinimalContextDb context) =>
     {
@@ -29,6 +45,7 @@ app.MapGet("/customer", async (
 
         return Results.Ok(await context.Customers.ToListAsync());
     })
+    .Produces<List<Customer>>(StatusCodes.Status200OK)
     .WithName("GetCustomer")
     .WithTags("Customer");
 
