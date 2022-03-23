@@ -4,6 +4,9 @@ using Minimal.Api.Models;
 using MiniValidation;
 using Microsoft.AspNetCore.Identity;
 using Minimal.Api.Extensions;
+using Microsoft.Extensions.Options;
+using Minimal.Api.Auth.Models;
+using Minimal.Api.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +40,72 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapPost("/register", async (
+    SignInManager<IdentityUser> signManager,
+    UserManager<IdentityUser> userManager,
+    IOptions<AppJwtSettings> appJwtSettings,
+    RegisterUser registerUser) =>
+    {
+        if (registerUser == null)
+            return Results.BadRequest("User is required");
+
+        if (!MiniValidator.TryValidate(registerUser, out var errors))
+            return Results.ValidationProblem(errors);
+
+        var user = new IdentityUser
+        {
+            UserName = registerUser.Email,
+            Email = registerUser.Email,
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(user, registerUser.Password);
+
+        if (!result.Succeeded)
+            return Results.BadRequest(result.Errors);
+
+        var tokenResult = new JwtBuilder(appJwtSettings.Value).BuildToken(user);
+
+        return Results.Ok(tokenResult);
+    })
+    .ProducesValidationProblem()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("UserResiter")
+    .WithTags("User");
+
+app.MapPost("/login", async (
+    SignInManager<IdentityUser> signManager,
+    UserManager<IdentityUser> userManager,
+    IOptions<AppJwtSettings> appJwtSettings,
+    LoginUser loginUser) =>
+    {
+        if (loginUser == null)
+            return Results.BadRequest("User is required");
+
+        if (!MiniValidator.TryValidate(loginUser, out var errors))
+            return Results.ValidationProblem(errors);
+
+        var result = await signManager.PasswordSignInAsync(loginUser.Email, loginUser.Password, true, true);
+
+        if (result.IsLockedOut)
+            return Results.BadRequest("Blocked user");
+
+        if (!result.Succeeded)
+            return Results.BadRequest("User or password is invalid");
+
+        var user = await userManager.FindByEmailAsync(loginUser.Email);
+
+        var tokenResult = new JwtBuilder(appJwtSettings.Value).BuildToken(user);
+
+        return Results.Ok(tokenResult);
+    })
+    .ProducesValidationProblem()
+    .Produces(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("UserLogin")
+    .WithTags("User");
 
 app.MapGet("/customer", async (
     MinimalContextDb context) =>
